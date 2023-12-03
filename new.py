@@ -306,13 +306,17 @@ def ka(socket, s_addr):
     while True:
         if not KA_STATUS:
             return
-        socket.sendto(str.encode("4"), s_addr)
-        data = socket.recv(1500)
-        info = str(data.decode())
-        if info == "4":
-            print("Client - Keep Alive")
-        else:
-            print("Connection off")
+        try:
+            socket.sendto(str.encode("4"), s_addr)
+            data = socket.recv(1500)
+            info = str(data.decode())
+            if info == "4":
+                print("Client - Keep Alive")
+            else:
+                print("Connection off")
+                break
+        except (socket.timeout, socket.error) as e:
+            print(f"Error in keepalive: {e}")
             break
         time.sleep(10)
 
