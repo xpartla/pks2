@@ -149,6 +149,7 @@ def send_file(socket, server_ip):
 
         if include_error == 'Y' or include_error == 'y':
             if random.random() < 0.5:  # kazdy druhy packet je zly
+            if random.random() < 0.5:  # kazdy druhy packet je zly
                 crc += 1
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), frag_amount, crc)
@@ -307,21 +308,13 @@ def ka(socket, s_addr):
         if not KA_STATUS:
             return
         socket.sendto(str.encode("4"), s_addr)
-        socket.settimeout(30)
-        try:
-            data = socket.recv(1500)
-            info = str(data.decode())
-            if info == "4":
-                print("Client - Keep Alive")
-            else:
-                print("Connection off")
-                break
-        except socket.timeout:
-            print("No message in set time window, shutting down")
+        data = socket.recv(1500)
+        info = str(data.decode())
+        if info == "4":
+            print("Client - Keep Alive")
+        else:
+            print("Connection off")
             break
-        finally:
-            socket.settimeout(None)
-
         time.sleep(10)
 
 if __name__ == '__main__':
