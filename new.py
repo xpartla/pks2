@@ -246,7 +246,7 @@ def recieve_msg(fragment_amount, s_socket, msg_type):
 
 
 def ka_thread(socket, s_addr):
-    thread = threading.Thread(target=ka(socket, s_addr))
+    thread = threading.Thread(target=ka, args=(socket, s_addr))
     thread.daemon = True
     thread.start()
     return thread
