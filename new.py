@@ -41,6 +41,8 @@ def run_client(socket, server_ip):
             send_file(socket, server_ip)
         elif mode == 'q':
             return
+        elif mode == 's':
+            switch(socket, server_ip)
         else:
             print("Wrong input, try again")
 
@@ -164,7 +166,7 @@ def run_server(socket, address):
             return
 
         if mode == 's':
-            print("TBD")
+            switch(socket, address)
         else:
             print("Server ON")
 
@@ -172,23 +174,25 @@ def run_server(socket, address):
                 socket.settimeout(60)
 
                 while True:
-                    data = socket.recv(1500)
-                    info = str(data.decode())
+                    while True:
+                        data = socket.recv(1500)
+                        info = str(data.decode())
 
-                    message_type = info[:1]
-                    #Text
-                    if message_type == '1':
-                        fragment_amount = info[1:]
-                        print("Fragment amount: ", fragment_amount)
-                        recieve_msg(fragment_amount, socket, "text")
-                        break
+                        message_type = info[:1]
+                        #Text
+                        if message_type == '1':
+                            fragment_amount = info[1:]
+                            print("Fragment amount: ", fragment_amount)
+                            recieve_msg(fragment_amount, socket, "text")
+                            break
 
-                    #File
-                    if message_type == '2':
-                        fragment_amount = info[1:]
-                        print("Fragment amount: ", fragment_amount)
-                        recieve_msg(fragment_amount, socket, "file")
-                        break
+                        #File
+                        if message_type == '2':
+                            fragment_amount = info[1:]
+                            print("Fragment amount: ", fragment_amount)
+                            recieve_msg(fragment_amount, socket, "file")
+                            break
+
             except socket.timeout:
                 print("TIMEOUT ERROR, server OFF")
                 socket.close()
@@ -244,6 +248,23 @@ def recieve_msg(fragment_amount, s_socket, msg_type):
         print("Path: ", os.path.abspath(file_name))
 
 
+
+
+def switch(socket, server_address):
+    while True:
+        mode = input("c - client\ns - server\nq - quit")
+        if mode == 'c':
+            print("Changed role to CLIENT")
+            run_client(socket, server_address)
+        elif mode == 's':
+            print("Changed role to SERVER")
+            run_server(socket, server_address)
+        elif mode == 'q':
+            break
+        else:
+            print("Wrong input, try again:")
+
+
 '''def ka_thread(socket, s_addr):
     thread = threading.Thread(target=ka, args=(socket, s_addr))
     thread.daemon = True
@@ -278,3 +299,4 @@ if __name__ == '__main__':
 
 #TODO: chyba na strane serveru, po prenose 1 spravy sa timeoutuje asi alebo neviem, neprijma dalsie spravy a na clientovy vypise timeout
 #TODO: switch, keepalive, change header, fix var naming
+#switch asi done, server chyba asi done?
