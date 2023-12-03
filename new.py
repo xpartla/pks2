@@ -176,7 +176,7 @@ def run_server(socket, address):
                         data = socket.recv(1500)
                         info = str(data.decode())
 
-                        if info == '4':
+                        if info == "4":
                             print("Ha Ha Ha Ha Stayin' alive")
                             socket.sendto(str.encode("4"), address)
                             info = ''
@@ -280,10 +280,10 @@ def ka_thread(socket, s_addr):
 
 def ka(socket, s_addr):
     while True:
-        socket.sendto(str.encode('4'), s_addr)
+        socket.sendto(str.encode("4"), s_addr)
         data = socket.recv(1500)
         info = str(data.decode())
-        if info == '4':
+        if info == "4":
             print("Staying alive")
         else:
             print("Connection off")
