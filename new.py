@@ -126,7 +126,7 @@ def send_file(socket, server_ip):
         crc = binascii.crc_hqx(header + send, 0)
 
         if include_error == 'Y' or include_error == 'y':
-            if random.random() < 0.5:  # TODO: Zisti preco random a nie straight up proste crc+1
+            if random.random() < 0.5:  # TODO: Zisti preco random a nie straight up proste crc +1
                 crc += 1
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), frag_amount, crc)
