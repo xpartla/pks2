@@ -8,24 +8,38 @@ import time
 import random
 
 def client_setup():
-    c_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    server_info = (input("Input server ADDRESS"), int(input("Input server PORT")))
-    c_socket.sendto(str.encode(""), server_info)
-    c_socket.settimeout(60)
-    data, server_info[0] = c_socket.recvfrom(1500)
-    data = data.decode()
-    if data == "1":
-        print("Connection Successful, \nServer address: ", server_info[0],"\nServer port: ", server_info[1])
-        run_client(c_socket, server_info[0])
-    else:
-        print("Something went wrong")
+    while True:
+        try:
+            c_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            server_info = (input("Input server ADDRESS"), int(input("Input server PORT")))
+            addr = server_info[0]
+            c_socket.sendto(str.encode(""), server_info)
+            c_socket.settimeout(60)
+            data, addr = c_socket.recvfrom(1500)
+            data = data.decode()
+            if data == "1":
+                print("Connection Successful, \nServer address: ", server_info[0],"\nServer port: ", server_info[1])
+                run_client(c_socket, server_info)
+        except (socket.timeout, socket.gaierror) as e:
+            print(e)
+            print("Something went wrong")
+            continue
 
 def run_client(socket, server_ip):
     print("WEEEEEEEEE")
+    keepalive = None
+
     while True:
         mode = input("t - text, \nf - file, \ns - switch roles \nq - quit")
         if mode == 't':
+            keepalive = ka_thread(socket, server_ip)
+            keepalive.join()
             send_text(socket, server_ip)
+        elif mode == 'f':
+            keepalive = ka_thread(socket, server_ip)
+            keepalive.join()
+            send_text(socket, server_ip)
+            send_file(socket, server_ip)
         elif mode == 'q':
             return
         else:
@@ -42,10 +56,14 @@ def send_text(socket, server_ip):
     fragment_amount = math.ceil(len(msg)/fragment_size)
     print("Fragment amount: ", fragment_amount)
 
+    comm_start = ("1" + str(fragment_amount))
+    comm_start = comm_start.encode('utf-8').strip()
+    socket.sendto(comm_start, server_ip)
+
     include_error = input("Include error?(Y/N):")
 
     while True:
-        if len(msg) == 0:
+        if len(msg) == 0 or fragment_amount == 0:
             break
         send = msg[:fragment_size]
         send = str.encode(send)
@@ -76,11 +94,64 @@ def send_text(socket, server_ip):
             return
 
 
+def send_file(socket, server_ip):
+
+    file_name = input("Input the file name: ")
+    frag_size = int(input("Input fragment size: "))
+
+    while frag_size >= 64965 or frag_size <= 0:     #TODO: Change max fragment size
+        frag_size = int(input("Input Fragment Size (max 64965B): "))
+
+    size = os.path.getsize(file_name)
+    print("File: ", file_name, "Size: ", size, "B")
+    print("Path: ", os.path.abspath(file_name))
+    file = open(file_name, "rb")
+    file_size = os.path.getsize(file_name)
+    frag_amount = math.ceil(file_size / frag_size)
+    print("Fragment amount: ", frag_amount)
+
+    msg = file.read()
+    comm_start = ("2" + str(frag_amount))
+    comm_start = comm_start.encode('utf-8').strip()
+    socket.sendto(comm_start, server_ip)
+
+    include_error = input("Include error?(Y/N):")
+
+    while True:
+        if len(msg) == 0:
+            break
+        send = msg[:frag_size]
+
+        header = struct.pack("c", str.encode("2")) + struct.pack("HH", len(send), frag_amount)
+        crc = binascii.crc_hqx(header + send, 0)
+
+        if include_error == 'Y' or include_error == 'y':
+            if random.random() < 0.5:  # TODO: Zisti preco random a nie straight up proste crc+1
+                crc += 1
+
+        header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), frag_amount, crc)
+
+        socket.sendto(header + send, server_ip)
+        data, server_ip = socket.recvfrom(1500)
+
+        try:
+            socket.settimeout(10.0)
+            data = data.decode()
+            if data == "5":
+                frag_amount += 1
+                msg = msg[frag_size:]
+            else:
+                pass
+        except (socket.timeout, socket.gaierror) as e:
+            print(e)
+            print("ERROR")
+            return
 
 def server_setup():
     s_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    #c_port = input("Input Client Port: ")
-    s_socket.bind("", int(input("Input Client Port")))
+    c_port = input("Input Client Port: ")
+    info = ("", int(c_port))
+    s_socket.bind(info)
     data, addr = s_socket.recvfrom(1500)
     s_socket.sendto(str.encode("1"), addr)
     run_server(s_socket, addr)
@@ -88,7 +159,7 @@ def server_setup():
 def run_server(socket, address):
     print("WEEEEEEEEEE")
     while True:
-        mode = input("q - quit \ns - switch roles ")
+        mode = input("q - quit \ns - switch roles \nEnter - continue ")
 
         if mode == 'q':
             return
@@ -124,15 +195,15 @@ def run_server(socket, address):
                 socket.close()
                 return
 
-def recieve_msg(fragment_amount, socket, msg_type):
+
+def recieve_msg(fragment_amount, s_socket, msg_type):
     fragment_counter = 0
     overall_fragments = 0
     whole_msg = []
     while True:
-        if int(fragment_amount) == 0:
+        if int(fragment_amount) == fragment_counter:
             break
-
-        data, address = socket.recvfrom(64965)
+        data, address = s_socket.recvfrom(64965)
         msg = data[7:]
         length, fragment_number, crc_recieved = struct.unpack("HHH", data[1:7])
         header = struct.pack("c", str.encode("2")) + struct.pack("HH", len(msg), fragment_number)
@@ -149,24 +220,49 @@ def recieve_msg(fragment_amount, socket, msg_type):
             if msg_type == "file":
                 whole_msg.append(msg)
 
-            socket.sendto(str.encode("5"), address)
+            s_socket.sendto(str.encode("5"), address)
 
         else:
             print(f"Fragment Number{fragment_counter} rejected")
-            socket.sendto(str.encode("3"), address)
+            s_socket.sendto(str.encode("3"), address)
             overall_fragments += 1
 
     print("Amount of damaged fragments: ", overall_fragments - fragment_counter)
-    print("Amount of all recieved fragments: ", overall_fragments)
+    print("Amount of all received fragments: ", overall_fragments)
     print("Amount of accepted fragments: ", fragment_counter)
 
     if msg_type == "text":
-        print("Message recieved: ", ''.join(whole_msg))
+        print("Message received: ", ''.join(whole_msg))
 
     if msg_type == "file":
-        print("TBD")
+        file_name = "received.jpg"
+        file = open(file_name, "wb")
+
+        for frag in whole_msg:
+            file.write(frag)
+        file.close()
+        print("Name: ", file_name, "Size: ", os.path.getsize(file_name), "B")
+        print("Path: ", os.path.abspath(file_name))
 
 
+def ka_thread(socket, s_addr):
+    thread = threading.Thread(target=ka(socket, s_addr))
+    thread.daemon = True
+    thread.start()
+    return thread
+
+
+def ka(socket, s_addr):
+    while True:
+        socket.sendto(str.encode('4', s_addr))
+        data = socket.recv(1500)
+        info = str(data.decode())
+        if info == '4':
+            print("Staying alive")
+        else:
+            print("Connection off")
+            break
+        time.sleep(10)
 
 if __name__ == '__main__':
     while True:
