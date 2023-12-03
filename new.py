@@ -7,6 +7,9 @@ import threading
 import time
 import random
 
+KA_STATUS = True
+
+
 def client_setup():
     while True:
         try:
@@ -28,22 +31,36 @@ def client_setup():
 def run_client(socket, server_ip):
     print("WEEEEEEEEE")
     keepalive = None
+    global KA_STATUS
+
     keepalive = ka_thread(socket, server_ip)
-    keepalive.join()
 
     while True:
         mode = input("t - text, \nf - file, \ns - switch roles \nq - quit")
         if mode == 't':
+            if keepalive is not None:
+                KA_STATUS = False
+                keepalive.join()
             send_text(socket, server_ip)
         elif mode == 'f':
+            if keepalive is not None:
+                KA_STATUS = False
+                keepalive.join()
             send_file(socket, server_ip)
         elif mode == 'q':
-            return
+            if keepalive is not None:
+                KA_STATUS = False
+                keepalive.join()
+            break
         elif mode == 's':
+            if keepalive is not None:
+                KA_STATUS = False
+                keepalive.join()
             switch(socket, server_ip)
         else:
             print("Wrong input, try again")
 
+    return
 def send_text(socket, server_ip):
 
     msg = input("Input your message: ")
@@ -280,6 +297,8 @@ def ka_thread(socket, s_addr):
 
 def ka(socket, s_addr):
     while True:
+        if not KA_STATUS:
+            return
         socket.sendto(str.encode("4"), s_addr)
         data = socket.recv(1500)
         info = str(data.decode())
