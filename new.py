@@ -34,8 +34,11 @@ def run_client(socket, server_ip):
     global KA_STATUS
 
     while True:
-        KA_STATUS = True
-        keepalive = ka_thread(socket, server_ip)
+        ka_start = input("Turn on KA? (server has to be in listening mode) (Y/N)")
+        if ka_start == 'Y' or ka_start == 'y':
+            KA_STATUS = True
+            keepalive = ka_thread(socket, server_ip)
+
 
         mode = input("t - text, \nf - file, \ns - switch roles \nq - quit")
         if mode == 't':
@@ -176,7 +179,7 @@ def server_setup():
 def run_server(socket, address):
     print("WEEEEEEEEEE")
     while True:
-        mode = input("q - quit \ns - switch roles \nEnter - continue ")
+        mode = input("q - quit \ns - switch roles \nEnter - listen ")
 
         if mode == 'q':
             return
