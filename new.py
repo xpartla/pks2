@@ -301,7 +301,12 @@ def ka(socket, s_addr):
         if not KA_STATUS:
             return
         socket.sendto(str.encode("4"), s_addr)
-        data = socket.recv(1500)
+        try:
+            data = socket.recv(1500)
+        except socket.timeout:
+            print("Socket timed out")
+        except socket.error as e:
+            print(f"Socket error: {e}")
         info = str(data.decode())
         if info == "4":
             print("Staying alive")
