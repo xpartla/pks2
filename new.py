@@ -38,7 +38,6 @@ def run_client(socket, server_ip):
         elif mode == 'f':
             '''keepalive = ka_thread(socket, server_ip)
             keepalive.join()'''
-            send_text(socket, server_ip)
             send_file(socket, server_ip)
         elif mode == 'q':
             return
@@ -275,3 +274,7 @@ if __name__ == '__main__':
             break
         else:
             print("Wrong input, try again:")
+
+
+#TODO: chyba na strane serveru, po prenose 1 spravy sa timeoutuje asi alebo neviem, neprijma dalsie spravy a na clientovy vypise timeout
+#TODO: switch, keepalive, change header, fix var naming
