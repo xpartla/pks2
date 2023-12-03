@@ -14,7 +14,7 @@ def client_setup():
     while True:
         try:
             c_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            server_info = (input("Input server ADDRESS"), int(input("Input server PORT")))
+            server_info = (input("Input server ADDRESS: "), int(input("Input server PORT: ")))
             addr = server_info[0]
             c_socket.sendto(str.encode(""), server_info)
             c_socket.settimeout(60)
@@ -56,6 +56,7 @@ def run_client(socket, server_ip):
             if keepalive is not None:
                 KA_STATUS = False
                 keepalive.join()
+            print("Exiting client, setup new connection to server: ")
             break
         elif mode == 's' or mode == 'S':
             if keepalive is not None:
@@ -93,7 +94,7 @@ def send_text(socket, server_ip):
         crc = binascii.crc_hqx(header + send, 0)
 
         if include_error == 'Y' or include_error == 'y':
-            if random.random() < 0.5: #TODO: Zisti preco random a nie straight up proste crc+1
+            if random.random() < 0.5: #teoreticky kazdy druhy packet je zly
                 crc += 1
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), fragment_amount, crc)
@@ -147,7 +148,7 @@ def send_file(socket, server_ip):
         crc = binascii.crc_hqx(header + send, 0)
 
         if include_error == 'Y' or include_error == 'y':
-            if random.random() < 0.5:  # TODO: Zisti preco random a nie straight up proste crc +1
+            if random.random() < 0.5:  # kazdy druhy packet je zly
                 crc += 1
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), frag_amount, crc)
@@ -306,18 +307,21 @@ def ka(socket, s_addr):
         if not KA_STATUS:
             return
         socket.sendto(str.encode("4"), s_addr)
+        socket.settimeout(30)
         try:
             data = socket.recv(1500)
+            info = str(data.decode())
+            if info == "4":
+                print("Client - Keep Alive")
+            else:
+                print("Connection off")
+                break
         except socket.timeout:
-            print("Socket timed out")
-        except socket.error as e:
-            print(f"Socket error: {e}")
-        info = str(data.decode())
-        if info == "4":
-            print("Client - Keep Alive")
-        else:
-            print("Connection off")
+            print("No message in set time window, shutting down")
             break
+        finally:
+            socket.settimeout(None)
+
         time.sleep(10)
 
 if __name__ == '__main__':
