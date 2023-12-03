@@ -32,12 +32,12 @@ def run_client(socket, server_ip):
     while True:
         mode = input("t - text, \nf - file, \ns - switch roles \nq - quit")
         if mode == 't':
-            '''keepalive = ka_thread(socket, server_ip)
-            keepalive.join()'''
+            keepalive = ka_thread(socket, server_ip)
+            keepalive.join()
             send_text(socket, server_ip)
         elif mode == 'f':
-            '''keepalive = ka_thread(socket, server_ip)
-            keepalive.join()'''
+            keepalive = ka_thread(socket, server_ip)
+            keepalive.join()
             send_file(socket, server_ip)
         elif mode == 'q':
             return
@@ -265,7 +265,7 @@ def switch(socket, server_address):
             print("Wrong input, try again:")
 
 
-'''def ka_thread(socket, s_addr):
+def ka_thread(socket, s_addr):
     thread = threading.Thread(target=ka, args=(socket, s_addr))
     thread.daemon = True
     thread.start()
@@ -274,7 +274,7 @@ def switch(socket, server_address):
 
 def ka(socket, s_addr):
     while True:
-        socket.sendto(str.encode('4', s_addr))
+        socket.sendto(str.encode('4'), s_addr)
         data = socket.recv(1500)
         info = str(data.decode())
         if info == '4':
@@ -282,7 +282,7 @@ def ka(socket, s_addr):
         else:
             print("Connection off")
             break
-        time.sleep(10)'''
+        time.sleep(10)
 
 if __name__ == '__main__':
     while True:
