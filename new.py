@@ -18,6 +18,7 @@ def client_setup():
             addr = server_info[0]
             c_socket.sendto(str.encode(""), server_info)
             c_socket.settimeout(60)
+            print("Waiting for response from server...")
             data, addr = c_socket.recvfrom(1500)
             data = data.decode()
             if data == "1":
@@ -40,23 +41,23 @@ def run_client(socket, server_ip):
             keepalive = ka_thread(socket, server_ip)
 
 
-        mode = input("t - text, \nf - file, \ns - switch roles \nq - quit")
-        if mode == 't':
+        mode = input("Choose function: \nt - text message, \nf - file transfer, \ns - switch roles \nq - quit")
+        if mode == 't' or mode == 'T':
             if keepalive is not None:
                 KA_STATUS = False
                 keepalive.join()
             send_text(socket, server_ip)
-        elif mode == 'f':
+        elif mode == 'f' or mode == 'F':
             if keepalive is not None:
                 KA_STATUS = False
                 keepalive.join()
             send_file(socket, server_ip)
-        elif mode == 'q':
+        elif mode == 'q' or mode == 'Q':
             if keepalive is not None:
                 KA_STATUS = False
                 keepalive.join()
             break
-        elif mode == 's':
+        elif mode == 's' or mode == 'S':
             if keepalive is not None:
                 KA_STATUS = False
                 keepalive.join()
@@ -172,19 +173,20 @@ def server_setup():
     c_port = input("Input Client Port: ")
     info = ("", int(c_port))
     s_socket.bind(info)
+    print("Waiting for Client to connect...")
     data, addr = s_socket.recvfrom(1500)
     s_socket.sendto(str.encode("1"), addr)
     run_server(s_socket, addr)
 
 def run_server(socket, address):
-    print("WEEEEEEEEEE")
+    print("You are the SERVER")
     while True:
-        mode = input("q - quit \ns - switch roles \nEnter - listen ")
+        mode = input("Choose operation \nq - quit \ns - switch roles \nEnter - listen ")
 
-        if mode == 'q':
+        if mode == 'q' or mode == 'Q':
             return
 
-        if mode == 's':
+        if mode == 's' or mode == 'S':
             switch(socket, address)
         else:
             print("Server ON")
@@ -198,7 +200,7 @@ def run_server(socket, address):
                         info = str(data.decode())
 
                         if info == "4":
-                            print("Ha Ha Ha Ha Stayin' alive")
+                            print("Server - Keep Alive")
                             socket.sendto(str.encode("4"), address)
                             info = ''
                             break
@@ -279,14 +281,14 @@ def recieve_msg(fragment_amount, s_socket, msg_type):
 
 def switch(socket, server_address):
     while True:
-        mode = input("c - client\ns - server\nq - quit")
-        if mode == 'c':
+        mode = input("Choose your new role: \nc - client\ns - server\nq - quit")
+        if mode == 'c' or mode == 'C':
             print("Changed role to CLIENT")
             run_client(socket, server_address)
-        elif mode == 's':
+        elif mode == 's' or mode == 'S':
             print("Changed role to SERVER")
             run_server(socket, server_address)
-        elif mode == 'q':
+        elif mode == 'q' or mode == 'Q':
             break
         else:
             print("Wrong input, try again:")
@@ -312,7 +314,7 @@ def ka(socket, s_addr):
             print(f"Socket error: {e}")
         info = str(data.decode())
         if info == "4":
-            print("Staying alive")
+            print("Client - Keep Alive")
         else:
             print("Connection off")
             break
@@ -320,12 +322,12 @@ def ka(socket, s_addr):
 
 if __name__ == '__main__':
     while True:
-        mode = input("c - client\ns - server\nq - quit")
-        if mode == 'c':
+        mode = input("Choose role: \nc - client\ns - server\nq - quit")
+        if mode == 'c' or mode == 'C':
             client_setup()
-        elif mode == 's':
+        elif mode == 's' or mode == 'S':
             server_setup()
-        elif mode == 'q':
+        elif mode == 'q' or mode == 'Q':
             break
         else:
             print("Wrong input, try again:")
