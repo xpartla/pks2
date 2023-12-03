@@ -149,7 +149,6 @@ def send_file(socket, server_ip):
 
         if include_error == 'Y' or include_error == 'y':
             if random.random() < 0.5:  # kazdy druhy packet je zly
-            if random.random() < 0.5:  # kazdy druhy packet je zly
                 crc += 1
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), frag_amount, crc)
