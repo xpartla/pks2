@@ -32,12 +32,12 @@ def run_client(socket, server_ip):
     while True:
         mode = input("t - text, \nf - file, \ns - switch roles \nq - quit")
         if mode == 't':
-            keepalive = ka_thread(socket, server_ip)
-            keepalive.join()
+            '''keepalive = ka_thread(socket, server_ip)
+            keepalive.join()'''
             send_text(socket, server_ip)
         elif mode == 'f':
-            keepalive = ka_thread(socket, server_ip)
-            keepalive.join()
+            '''keepalive = ka_thread(socket, server_ip)
+            keepalive.join()'''
             send_text(socket, server_ip)
             send_file(socket, server_ip)
         elif mode == 'q':
@@ -245,7 +245,7 @@ def recieve_msg(fragment_amount, s_socket, msg_type):
         print("Path: ", os.path.abspath(file_name))
 
 
-def ka_thread(socket, s_addr):
+'''def ka_thread(socket, s_addr):
     thread = threading.Thread(target=ka, args=(socket, s_addr))
     thread.daemon = True
     thread.start()
@@ -262,7 +262,7 @@ def ka(socket, s_addr):
         else:
             print("Connection off")
             break
-        time.sleep(10)
+        time.sleep(10)'''
 
 if __name__ == '__main__':
     while True:
