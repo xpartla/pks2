@@ -28,16 +28,14 @@ def client_setup():
 def run_client(socket, server_ip):
     print("WEEEEEEEEE")
     keepalive = None
+    keepalive = ka_thread(socket, server_ip)
+    keepalive.join()
 
     while True:
         mode = input("t - text, \nf - file, \ns - switch roles \nq - quit")
         if mode == 't':
-            keepalive = ka_thread(socket, server_ip)
-            keepalive.join()
             send_text(socket, server_ip)
         elif mode == 'f':
-            keepalive = ka_thread(socket, server_ip)
-            keepalive.join()
             send_file(socket, server_ip)
         elif mode == 'q':
             return
@@ -178,20 +176,28 @@ def run_server(socket, address):
                         data = socket.recv(1500)
                         info = str(data.decode())
 
-                        message_type = info[:1]
-                        #Text
-                        if message_type == '1':
-                            fragment_amount = info[1:]
-                            print("Fragment amount: ", fragment_amount)
-                            recieve_msg(fragment_amount, socket, "text")
+                        if info == '4':
+                            print("Ha Ha Ha Ha Stayin' alive")
+                            socket.sendto(str.encode("4"), address)
+                            info = ''
+                            break
+                        else:
                             break
 
-                        #File
-                        if message_type == '2':
-                            fragment_amount = info[1:]
-                            print("Fragment amount: ", fragment_amount)
-                            recieve_msg(fragment_amount, socket, "file")
-                            break
+                    message_type = info[:1]
+                    #Text
+                    if message_type == '1':
+                        fragment_amount = info[1:]
+                        print("Fragment amount: ", fragment_amount)
+                        recieve_msg(fragment_amount, socket, "text")
+                        break
+
+                    #File
+                    if message_type == '2':
+                        fragment_amount = info[1:]
+                        print("Fragment amount: ", fragment_amount)
+                        recieve_msg(fragment_amount, socket, "file")
+                        break
 
             except socket.timeout:
                 print("TIMEOUT ERROR, server OFF")
