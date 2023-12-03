@@ -33,9 +33,10 @@ def run_client(socket, server_ip):
     keepalive = None
     global KA_STATUS
 
-    keepalive = ka_thread(socket, server_ip)
-
     while True:
+        KA_STATUS = True
+        keepalive = ka_thread(socket, server_ip)
+
         mode = input("t - text, \nf - file, \ns - switch roles \nq - quit")
         if mode == 't':
             if keepalive is not None:
