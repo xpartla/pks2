@@ -9,10 +9,20 @@ import random
 
 KA_STATUS = True
 
+CONN_INIT = "1"
+DATA_TRANSFER = "2"
+INCORRECT_DATA = "3"
+KA_MSG = "4"
+CORRECT_DATA = "5"
+TEXT_MSG = "1"
+FILE_MSG = "2"
+
 
 def client_setup():
+    global CONN_INIT
     while True:
         try:
+            print(CONN_INIT)
             c_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             server_info = (input("Input server ADDRESS: "), int(input("Input server PORT: ")))
             addr = server_info[0]
@@ -21,7 +31,7 @@ def client_setup():
             print("Waiting for response from server...")
             data, addr = c_socket.recvfrom(1500)
             data = data.decode()
-            if data == "1":
+            if data == CONN_INIT:
                 print("Connection Successful, \nServer address: ", server_info[0],"\nServer port: ", server_info[1])
                 run_client(c_socket, server_info)
         except (socket.timeout, socket.gaierror) as e:
@@ -68,6 +78,9 @@ def run_client(socket, server_ip):
 
     return
 def send_text(socket, server_ip):
+    global CONN_INIT
+    global CORRECT_DATA
+    global TEXT_MSG
 
     msg = input("Input your message: ")
     fragment_size = 0
@@ -78,7 +91,7 @@ def send_text(socket, server_ip):
     fragment_amount = math.ceil(len(msg)/fragment_size)
     print("Fragment amount: ", fragment_amount)
 
-    comm_start = ("1" + str(fragment_amount))
+    comm_start = (TEXT_MSG + str(fragment_amount))
     comm_start = comm_start.encode('utf-8').strip()
     socket.sendto(comm_start, server_ip)
 
@@ -105,7 +118,7 @@ def send_text(socket, server_ip):
         try:
             socket.settimeout(10.0)
             data = data.decode()
-            if data == "5":
+            if data == CORRECT_DATA:
                 fragment_amount +=1
                 msg = msg[fragment_size:]
             else:
@@ -117,6 +130,8 @@ def send_text(socket, server_ip):
 
 
 def send_file(socket, server_ip):
+    global CORRECT_DATA
+    global FILE_MSG
 
     file_name = input("Input the file name: ")
     frag_size = int(input("Input fragment size: "))
@@ -133,7 +148,7 @@ def send_file(socket, server_ip):
     print("Fragment amount: ", frag_amount)
 
     msg = file.read()
-    comm_start = ("2" + str(frag_amount))
+    comm_start = (FILE_MSG + str(frag_amount))
     comm_start = comm_start.encode('utf-8').strip()
     socket.sendto(comm_start, server_ip)
 
@@ -159,7 +174,7 @@ def send_file(socket, server_ip):
         try:
             socket.settimeout(10.0)
             data = data.decode()
-            if data == "5":
+            if data == CORRECT_DATA:
                 frag_amount += 1
                 msg = msg[frag_size:]
             else:
@@ -170,16 +185,18 @@ def send_file(socket, server_ip):
             return
 
 def server_setup():
+    global CONN_INIT
     s_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     c_port = input("Input Client Port: ")
     info = ("", int(c_port))
     s_socket.bind(info)
     print("Waiting for Client to connect...")
     data, addr = s_socket.recvfrom(1500)
-    s_socket.sendto(str.encode("1"), addr)
+    s_socket.sendto(str.encode(CONN_INIT), addr)
     run_server(s_socket, addr)
 
 def run_server(socket, address):
+    global KA_MSG
     print("You are the SERVER")
     while True:
         mode = input("Choose operation \nq - quit \ns - switch roles \nEnter - listen ")
@@ -200,9 +217,9 @@ def run_server(socket, address):
                         data = socket.recv(1500)
                         info = str(data.decode())
 
-                        if info == "4":
+                        if info == KA_MSG:
                             print("Server - Keep Alive")
-                            socket.sendto(str.encode("4"), address)
+                            socket.sendto(str.encode(KA_MSG), address)
                             info = ''
                             break
                         else:
@@ -230,6 +247,8 @@ def run_server(socket, address):
 
 
 def recieve_msg(fragment_amount, s_socket, msg_type):
+    global CORRECT_DATA
+    global INCORRECT_DATA
     fragment_counter = 0
     overall_fragments = 0
     whole_msg = []
@@ -253,11 +272,11 @@ def recieve_msg(fragment_amount, s_socket, msg_type):
             if msg_type == "file":
                 whole_msg.append(msg)
 
-            s_socket.sendto(str.encode("5"), address)
+            s_socket.sendto(str.encode(CORRECT_DATA), address)
 
         else:
             print(f"Fragment Number{fragment_counter} rejected")
-            s_socket.sendto(str.encode("3"), address)
+            s_socket.sendto(str.encode(INCORRECT_DATA), address)
             overall_fragments += 1
 
     print("Amount of damaged fragments: ", overall_fragments - fragment_counter)
@@ -307,10 +326,10 @@ def ka(socket, s_addr):
         if not KA_STATUS:
             return
         try:
-            socket.sendto(str.encode("4"), s_addr)
+            socket.sendto(str.encode(KA_MSG), s_addr)
             data = socket.recv(1500)
             info = str(data.decode())
-            if info == "4":
+            if info == KA_MSG:
                 print("Client - Keep Alive")
             else:
                 print("Connection off")
