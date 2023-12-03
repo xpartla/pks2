@@ -29,7 +29,7 @@ def client_setup():
             continue
 
 def run_client(socket, server_ip):
-    print("WEEEEEEEEE")
+    print("You are now the CLIENT")
     keepalive = None
     global KA_STATUS
 
