@@ -18,6 +18,7 @@ CORRECT_DATA = "5"
 FILE_NAME = "6"
 FILE_PATH = "7"
 SWAP_REQUEST = "8"
+CLIENT_SWAP = "9"
 
 TEXT_MSG = "1"
 FILE_MSG = "2"
@@ -76,11 +77,19 @@ def run_client(socket, server_ip):
             if keepalive is not None:
                 KA_STATUS = False
                 keepalive.join()
-            switch(socket, server_ip)
+            socket.sendto(str.encode(CLIENT_SWAP), server_ip)
+            print("Sending Server Swap Request...")
+            print("Waiting for Response...")
+            data = socket.recv(1500)
+            info = str(data.decode())
+            if info == CLIENT_SWAP:
+                print("Swap Accepted, changing to client...")
+                run_server(socket, server_ip)
         else:
             print("Wrong input, try again")
 
     return
+
 def send_text(socket, server_ip):
     global CONN_INIT
     global CORRECT_DATA
@@ -241,6 +250,10 @@ def run_server(socket, address):
                         data = socket.recv(1500)
                         info = str(data.decode())
 
+                        if info == CLIENT_SWAP:
+                            print("Client wants to swap...")
+                            print("Accepting...")
+                            socket.sendto(str.encode(CLIENT_SWAP), address)
                         if info == KA_MSG or info == SWAP_REQUEST:
                             if change == 1:
                                 print("Sending Client Swap request...")
