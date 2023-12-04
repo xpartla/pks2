@@ -239,7 +239,12 @@ def run_server(socket, address):
                                 print("Sending Client Swap request...")
                                 socket.sendto(str.encode(SWAP_REQUEST), address)
                                 change = 0
-                                info = ''
+                                data = socket.recv(1500)
+                                info = str(data.decode())
+                                if info == CORRECT_DATA:
+                                    print("Swap accepted, swapping after next message... ")
+                                else:
+                                    print("Something went wrong with swap")
                                 break
 
                             print("Server - Keep Alive")
@@ -404,6 +409,8 @@ def ka(socket, s_addr):
                 print("Client - Keep Alive")
             elif info == SWAP_REQUEST:
                 print("Server wants to swap...")
+                print("Accepting...")
+                socket.sendto(str.encode(CORRECT_DATA), s_addr)
             else:
                 print("Connection off")
                 break
