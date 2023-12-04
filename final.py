@@ -15,6 +15,7 @@ KA_MSG = "4"
 CORRECT_DATA = "5"
 FILE_NAME = "6"
 FILE_PATH = "7"
+SWAP_REQUEST = "8"
 
 TEXT_MSG = "1"
 FILE_MSG = "2"
@@ -24,7 +25,6 @@ def client_setup():
     global CONN_INIT
     while True:
         try:
-            print(CONN_INIT)
             c_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             server_info = (input("Input server ADDRESS: "), int(input("Input server PORT: ")))
             addr = server_info[0]
@@ -210,6 +210,8 @@ def server_setup():
 
 def run_server(socket, address):
     global KA_MSG
+    global SWAP_REQUEST
+    change = 0
     print("You are the SERVER")
     while True:
         mode = input("Choose operation \nq - quit \ns - switch roles \nEnter - listen ")
@@ -217,10 +219,12 @@ def run_server(socket, address):
         if mode == 'q' or mode == 'Q':
             return
 
-        if mode == 's' or mode == 'S':
-            switch(socket, address)
+        #if mode == 's' or mode == 'S':
+        #    switch(socket, address)
         else:
             print("Server ON")
+            if mode == 's' or mode =='S':
+                change = 1
 
             try:
                 socket.settimeout(60)
@@ -230,7 +234,14 @@ def run_server(socket, address):
                         data = socket.recv(1500)
                         info = str(data.decode())
 
-                        if info == KA_MSG:
+                        if info == KA_MSG or info == SWAP_REQUEST:
+                            if change == 1:
+                                print("Sending Client Swap request...")
+                                socket.sendto(str.encode(SWAP_REQUEST), address)
+                                change = 0
+                                info = ''
+                                break
+
                             print("Server - Keep Alive")
                             socket.sendto(str.encode(KA_MSG), address)
                             info = ''
@@ -391,6 +402,8 @@ def ka(socket, s_addr):
             info = str(data.decode())
             if info == KA_MSG:
                 print("Client - Keep Alive")
+            elif info == SWAP_REQUEST:
+                print("Server wants to swap...")
             else:
                 print("Connection off")
                 break
@@ -410,8 +423,3 @@ if __name__ == '__main__':
             break
         else:
             print("Wrong input, try again:")
-
-
-#TODO: chyba na strane serveru, po prenose 1 spravy sa timeoutuje asi alebo neviem, neprijma dalsie spravy a na clientovy vypise timeout
-#TODO: switch, keepalive, change header, fix var naming
-#switch asi done, server chyba asi done?
