@@ -89,6 +89,7 @@ def run_client(socket, server_ip):
             print("Wrong input, try again")
 
     return
+#TODO: FIX CLIENT LOOP
 
 def send_text(socket, server_ip):
     global CONN_INIT
