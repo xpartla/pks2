@@ -128,8 +128,7 @@ def send_text(socket, server_ip):
         crc = binascii.crc_hqx(header + send, 0)
 
         if include_error == 'Y' or include_error == 'y':
-            error_pattern = 5
-            if fragment_amount % error_pattern == 0:
+            if random.random() < 0.5: #teoreticky kazdy druhy packet je zly
                 crc += 1
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), fragment_amount, crc)
@@ -194,10 +193,9 @@ def send_file(socket, server_ip):
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HH", len(send), frag_amount)
         crc = binascii.crc_hqx(header + send, 0)
-#a
+
         if include_error == 'Y' or include_error == 'y':
-            error_pattern = 5
-            if frag_amount % error_pattern == 0:
+            if random.random() < 0.5:  # kazdy druhy packet je zly
                 crc += 1
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), frag_amount, crc)
