@@ -212,8 +212,13 @@ def run_server(socket, address):
     global KA_MSG
     global SWAP_REQUEST
     change = 0
+    change_after_message = 0
     print("You are the SERVER")
     while True:
+        if change_after_message == 1:
+            change_after_message = 0
+            change_to_client(socket, address)
+
         mode = input("Choose operation \nq - quit \ns - switch roles \nEnter - listen ")
 
         if mode == 'q' or mode == 'Q':
@@ -223,7 +228,7 @@ def run_server(socket, address):
         #    switch(socket, address)
         else:
             print("Server ON")
-            if mode == 's' or mode =='S':
+            if mode == 's' or mode == 'S':
                 change = 1
 
             try:
@@ -243,6 +248,7 @@ def run_server(socket, address):
                                 info = str(data.decode())
                                 if info == CORRECT_DATA:
                                     print("Swap accepted, swapping after next message... ")
+                                    change_after_message = 1
                                 else:
                                     print("Something went wrong with swap")
                                 break
@@ -275,6 +281,10 @@ def run_server(socket, address):
                 print("TIMEOUT ERROR, server OFF")
                 socket.close()
                 return
+
+
+def change_to_client(socket, address):
+    run_client(socket, address)
 
 
 def file_setup(fragment_amount, s_socket, msg_type):
