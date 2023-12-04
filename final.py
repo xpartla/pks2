@@ -86,6 +86,7 @@ def run_client(socket, server_ip):
             if info == CLIENT_SWAP:
                 print("Swap Accepted, changing to client...")
                 run_server(socket, server_ip)
+                break
 
         if CHANGE:
             CHANGE = False
