@@ -29,7 +29,7 @@ def client_setup():
     while True:
         try:
             c_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            server_info = (input("Input server ADDRESS: "), int(input("Input server PORT: ")))
+            server_info = (input("Input server ADDRESS: "), int(input("Input communication PORT: ")))
             addr = server_info[0]
             c_socket.sendto(str.encode(""), server_info)
             c_socket.settimeout(60)
@@ -42,6 +42,7 @@ def client_setup():
         except (socket.timeout, socket.gaierror) as e:
             print(e)
             print("Something went wrong")
+            socket.close()
             continue
 
 def run_client(socket, server_ip):
@@ -56,8 +57,8 @@ def run_client(socket, server_ip):
             KA_STATUS = True
             keepalive = ka_thread(socket, server_ip)
 
-
-        mode = input("Choose function: \nt - text message, \nf - file transfer, \ns - switch roles \nq - quit")
+        print("Choose function: \nt - text message, \nf - file transfer, \ns - switch roles \nq - quit")
+        mode = input()
         if mode == 't' or mode == 'T':
             if keepalive is not None:
                 KA_STATUS = False
@@ -219,7 +220,7 @@ def server_setup():
     global CONN_INIT
     while True:
         s_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        c_port = input("Input Client Port: ")
+        c_port = input("Input Communication Port: ")
         info = ("", int(c_port))
         s_socket.bind(info)
         print("Waiting for Client to connect...")
@@ -262,7 +263,7 @@ def run_server(socket, address):
                         info = str(data.decode())
 
                         if info == CLIENT_SWAP:
-                            print("Client wants to swap...")
+                            print("Client sent swap request...")
                             print("Accepting...")
                             socket.sendto(str.encode(CLIENT_SWAP), address)
                             run_client(socket, address)
@@ -451,6 +452,7 @@ def ka(socket, s_addr):
             elif info == SWAP_REQUEST:
                 print("Server wants to swap...")
                 print("Accepting...")
+                print("Swapping after next message / file transfer...")
                 socket.sendto(str.encode(CORRECT_DATA), s_addr)
                 CHANGE = True
             else:
