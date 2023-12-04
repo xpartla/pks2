@@ -269,6 +269,7 @@ def run_server(socket, address):
                                 if info == CORRECT_DATA:
                                     print("Swap accepted, swapping after next message... ")
                                     change_after_message = 1
+                                    break
                                 else:
                                     print("Something went wrong with swap")
                                 break
