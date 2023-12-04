@@ -128,8 +128,8 @@ def send_text(socket, server_ip):
         crc = binascii.crc_hqx(header + send, 0)
 
         if include_error == 'Y' or include_error == 'y':
-            if random.random() < 0.5: #teoreticky kazdy druhy packet je zly
-                crc += 1
+            if random.random() < 0.2: # 20% chance for fragment to be incorrect
+                crc ^= 1
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), fragment_amount, crc)
 
@@ -195,8 +195,8 @@ def send_file(socket, server_ip):
         crc = binascii.crc_hqx(header + send, 0)
 
         if include_error == 'Y' or include_error == 'y':
-            if random.random() < 0.5:  # kazdy druhy packet je zly
-                crc += 1
+            if random.random() < 0.2:  # 20% chance for fragment to be incorrect
+                crc ^= 1
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), frag_amount, crc)
 
@@ -332,8 +332,8 @@ def file_setup(fragment_amount, s_socket, msg_type):
                     info = data[0].decode('utf-8')
                     my_type = info[0]
                     msg_content = info[1:]
-                    print(my_type)
-                    print(msg_content)
+                    #print(my_type)
+                    #print(msg_content)
                     if my_type == FILE_NAME:
                         file_name = msg_content
                     elif my_type == FILE_PATH:
@@ -361,7 +361,7 @@ def recieve_msg(fragment_amount, s_socket, msg_type, file_name, file_path):
     while True:
         if int(fragment_amount) == fragment_counter:
             break
-        data, address = s_socket.recvfrom(64965)
+        data, address = s_socket.recvfrom(1465)
         msg = data[7:]
         length, fragment_number, crc_recieved = struct.unpack("HHH", data[1:7])
         header = struct.pack("c", str.encode("2")) + struct.pack("HH", len(msg), fragment_number)
@@ -410,7 +410,7 @@ def recieve_msg(fragment_amount, s_socket, msg_type, file_name, file_path):
             file.write(frag)
         file.close()
         print("Name: ", file_name, "Size: ", os.path.getsize(file_name), "B")
-        print("Path where I want to save the file: ", file_path)
+        #print("Path where I want to save the file: ", file_path)
         print("Path: ", os.path.abspath(file_name))
 
 
