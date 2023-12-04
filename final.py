@@ -234,72 +234,69 @@ def run_server(socket, address):
 
         mode = input("Choose operation \nq - quit \ns - switch roles \nEnter - listen ")
 
-        if mode == 'q' or mode == 'Q':
-            return
 
-        #if mode == 's' or mode == 'S':
-        #    switch(socket, address)
-        else:
-            print("Server ON")
-            if mode == 's' or mode == 'S':
-                change = 1
-            try:
-                socket.settimeout(60)
+        print("Server ON")
+        if mode == 's' or mode == 'S':
+            change = 1
+        try:
+            socket.settimeout(60)
 
+            while True:
                 while True:
-                    while True:
-                        data = socket.recv(1500)
-                        info = str(data.decode())
+                    if mode == 'q' or mode == 'Q':
+                        return
+                    data = socket.recv(1500)
+                    info = str(data.decode())
 
-                        if info == CLIENT_SWAP:
-                            print("Client wants to swap...")
-                            print("Accepting...")
-                            socket.sendto(str.encode(CLIENT_SWAP), address)
-                            run_client(socket, address)
-                            return
+                    if info == CLIENT_SWAP:
+                        print("Client wants to swap...")
+                        print("Accepting...")
+                        socket.sendto(str.encode(CLIENT_SWAP), address)
+                        run_client(socket, address)
+                        return
 
-                        if info == KA_MSG or info == SWAP_REQUEST:
-                            if change == 1:
-                                print("Sending Client Swap request...")
-                                socket.sendto(str.encode(SWAP_REQUEST), address)
-                                change = 0
-                                data = socket.recv(1500)
-                                info = str(data.decode())
-                                if info == CORRECT_DATA:
-                                    print("Swap accepted, swapping after next message... ")
-                                    change_after_message = 1
-                                else:
-                                    print("Something went wrong with swap")
-                                break
-
-                            print("Server - Keep Alive")
-                            socket.sendto(str.encode(KA_MSG), address)
-                            info = ''
-                            break
-                        else:
+                    if info == KA_MSG or info == SWAP_REQUEST:
+                        if change == 1:
+                            print("Sending Client Swap request...")
+                            socket.sendto(str.encode(SWAP_REQUEST), address)
+                            change = 0
+                            data = socket.recv(1500)
+                            info = str(data.decode())
+                            if info == CORRECT_DATA:
+                                print("Swap accepted, swapping after next message... ")
+                                change_after_message = 1
+                            else:
+                                print("Something went wrong with swap")
                             break
 
-                    message_type = info[:1]
-                    #Text
-                    if message_type == '1':
-                        fragment_amount = info[1:]
-                        print("Fragment amount: ", fragment_amount)
-                        recieve_msg(fragment_amount, socket, "text", None, None)
+                        print("Server - Keep Alive")
+                        socket.sendto(str.encode(KA_MSG), address)
+                        info = ''
+                        break
+                    else:
                         break
 
-                    #File
-                    if message_type == '2':
-                        fragment_amount = info[1:]
-                        print("Fragment amount: ", fragment_amount)
-                        fragment_amount, socket, msg_type, file_name, file_path = file_setup(fragment_amount, socket, "file")
-                        print(file_path, file_name)
-                        recieve_msg(fragment_amount, socket, "file", file_name, file_path)
-                        break
+                message_type = info[:1]
+                #Text
+                if message_type == '1':
+                    fragment_amount = info[1:]
+                    print("Fragment amount: ", fragment_amount)
+                    recieve_msg(fragment_amount, socket, "text", None, None)
+                    break
 
-            except socket.timeout:
-                print("TIMEOUT ERROR, server OFF")
-                socket.close()
-                return
+                #File
+                if message_type == '2':
+                    fragment_amount = info[1:]
+                    print("Fragment amount: ", fragment_amount)
+                    fragment_amount, socket, msg_type, file_name, file_path = file_setup(fragment_amount, socket, "file")
+                    print(file_path, file_name)
+                    recieve_msg(fragment_amount, socket, "file", file_name, file_path)
+                    break
+
+        except socket.timeout:
+            print("TIMEOUT ERROR, server OFF")
+            socket.close()
+            return
 
 
 def change_to_client(socket, address):
