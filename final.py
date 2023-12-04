@@ -218,8 +218,8 @@ def run_server(socket, address):
     print("You are the SERVER")
     while True:
         if change_after_message == 1:
-            change_after_message = 0
             change_to_client(socket, address)
+            break
 
         mode = input("Choose operation \nq - quit \ns - switch roles \nEnter - listen ")
 
