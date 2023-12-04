@@ -72,7 +72,7 @@ def run_client(socket, server_ip):
             if keepalive is not None:
                 KA_STATUS = False
                 keepalive.join()
-            print("Exiting client, setup new connection to server: ")
+            print("Exiting client, setup new Client: ")
             break
         elif mode == 's' or mode == 'S':
             if keepalive is not None:
@@ -96,7 +96,6 @@ def run_client(socket, server_ip):
             print("Wrong input, try again")
 
     return
-#TODO: FIX CLIENT LOOPp
 
 def send_text(socket, server_ip):
     global CONN_INIT
@@ -218,14 +217,16 @@ def send_file(socket, server_ip):
 
 def server_setup():
     global CONN_INIT
-    s_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    c_port = input("Input Client Port: ")
-    info = ("", int(c_port))
-    s_socket.bind(info)
-    print("Waiting for Client to connect...")
-    data, addr = s_socket.recvfrom(1500)
-    s_socket.sendto(str.encode(CONN_INIT), addr)
-    run_server(s_socket, addr)
+    while True:
+        s_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        c_port = input("Input Client Port: ")
+        info = ("", int(c_port))
+        s_socket.bind(info)
+        print("Waiting for Client to connect...")
+        data, addr = s_socket.recvfrom(1500)
+        s_socket.sendto(str.encode(CONN_INIT), addr)
+        run_server(s_socket, addr)
+
 
 def run_server(socket, address):
     global KA_MSG
@@ -243,6 +244,7 @@ def run_server(socket, address):
         mode = input("Choose operation \nq - quit \ns - switch roles \nEnter - listen ")
 
         if mode == 'q' or mode == 'Q':
+            print("Exiting SERVER mode, setup new server: ")
             return
 
         #if mode == 's' or mode == 'S':
@@ -281,7 +283,7 @@ def run_server(socket, address):
                                     print("Something went wrong with swap")
                                 break
 
-                            print("Server - Keep Alive")
+                            print("S < ")
                             socket.sendto(str.encode(KA_MSG), address)
                             info = ''
                             break
@@ -445,7 +447,7 @@ def ka(socket, s_addr):
             data = socket.recv(1500)
             info = str(data.decode())
             if info == KA_MSG:
-                print("Client - Keep Alive")
+                print("C < ")
             elif info == SWAP_REQUEST:
                 print("Server wants to swap...")
                 print("Accepting...")
