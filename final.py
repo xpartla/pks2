@@ -398,7 +398,7 @@ def recieve_msg(fragment_amount, s_socket, msg_type, file_name, file_path):
             file_name = input("Input new file name: ")
 
         full_path = os.path.join(file_path, file_name)
-        print("Do you want to use this path to save the file?", full_path)
+        print("Do you want to use this path to save the file? (If not -> using default)", full_path)
         place = input("(Y/N): ")
         if place == 'Y' or place == 'y':
             file = open(full_path, "wb")
@@ -412,23 +412,6 @@ def recieve_msg(fragment_amount, s_socket, msg_type, file_name, file_path):
         print("Name: ", file_name, "Size: ", os.path.getsize(file_name), "B")
         print("Path where I want to save the file: ", file_path)
         print("Path: ", os.path.abspath(file_name))
-
-
-
-
-def switch(socket, server_address):
-    while True:
-        mode = input("Choose your new role: \nc - client\ns - server\nq - quit")
-        if mode == 'c' or mode == 'C':
-            print("Changed role to CLIENT")
-            run_client(socket, server_address)
-        elif mode == 's' or mode == 'S':
-            print("Changed role to SERVER")
-            run_server(socket, server_address)
-        elif mode == 'q' or mode == 'Q':
-            break
-        else:
-            print("Wrong input, try again:")
 
 
 def ka_thread(socket, s_addr):
