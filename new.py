@@ -157,11 +157,11 @@ def send_file(socket, server_ip):
     comm_start = comm_start.encode('utf-8').strip()
     socket.sendto(comm_start, server_ip)
 
-    fname_msg = FILE_NAME + file_name
+    fname_msg = (FILE_NAME + str(file_name))
     fname_msg = fname_msg.encode('utf-8').strip()
     socket.sendto(fname_msg, server_ip)
 
-    fpath_msg = FILE_PATH + file_path
+    fpath_msg = (FILE_PATH + str(file_path))
     fpath_msg = fpath_msg.encode('utf-8').strip()
     socket.sendto(fpath_msg, server_ip)
 
