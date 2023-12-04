@@ -222,6 +222,8 @@ def server_setup():
 def run_server(socket, address):
     global KA_MSG
     global SWAP_REQUEST
+    global CHANGE
+
     change = 0
     change_after_message = 0
     print("You are the SERVER")
@@ -241,7 +243,6 @@ def run_server(socket, address):
             print("Server ON")
             if mode == 's' or mode == 'S':
                 change = 1
-
             try:
                 socket.settimeout(60)
 
@@ -254,6 +255,9 @@ def run_server(socket, address):
                             print("Client wants to swap...")
                             print("Accepting...")
                             socket.sendto(str.encode(CLIENT_SWAP), address)
+                            run_client(socket, address)
+                            return
+
                         if info == KA_MSG or info == SWAP_REQUEST:
                             if change == 1:
                                 print("Sending Client Swap request...")
@@ -437,6 +441,7 @@ def ka(socket, s_addr):
                 print("Server wants to swap...")
                 print("Accepting...")
                 socket.sendto(str.encode(CORRECT_DATA), s_addr)
+                CHANGE = True
             else:
                 print("Connection off")
                 break
