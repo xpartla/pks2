@@ -8,6 +8,8 @@ import time
 import random
 
 KA_STATUS = True
+CHANGE = False
+
 CONN_INIT = "1"
 DATA_TRANSFER = "2"
 INCORRECT_DATA = "3"
@@ -408,6 +410,7 @@ def ka_thread(socket, s_addr):
 
 
 def ka(socket, s_addr):
+    global CHANGE
     while True:
         if not KA_STATUS:
             return
