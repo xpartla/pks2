@@ -232,7 +232,7 @@ def run_server(socket, address):
             change_to_client(socket, address)
             break
 
-        mode = input("Choose operation \nq - quit \ns - switch roles \nEnter - listen ")
+        mode = input("Choose operation \nq - quit \ns - switch roles \nlistening ")
 
 
         print("Server ON")
