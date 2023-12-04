@@ -138,7 +138,7 @@ def send_file(socket, server_ip):
     global FILE_PATH
 
     file_name = input("Input the file name: ")
-    file_path = input("Input the file path: ")
+    file_path = input("Input the file path example -> (C:'\'PKS2'\'transfer)': ")
     frag_size = int(input("Input fragment size: "))
 
     while frag_size >= 64965 or frag_size <= 0:     #TODO: Change max fragment size
@@ -251,6 +251,7 @@ def run_server(socket, address):
                         fragment_amount = info[1:]
                         print("Fragment amount: ", fragment_amount)
                         fragment_amount, socket, msg_type, file_name, file_path = file_setup(fragment_amount, socket, "file")
+                        print(file_path, file_name)
                         recieve_msg(fragment_amount, socket, "file", file_name, file_path)
                         break
 
@@ -271,18 +272,19 @@ def file_setup(fragment_amount, s_socket, msg_type):
             while True:
                 while True:
                     data = s_socket.recvfrom(1500)
-                    info = str(data.decode())
-                    type = info[:1]
+                    info = data[0].decode('utf-8')
+                    my_type = info[0]
                     msg_content = info[1:]
-                    if type == FILE_NAME:
+                    print(my_type)
+                    print(msg_content)
+                    if my_type == FILE_NAME:
                         file_name = msg_content
-                    elif type == FILE_PATH:
+                    elif my_type == FILE_PATH:
                         file_path = msg_content
 
                     if file_path is not None and file_path is not None:
                         return fragment_amount, s_socket, msg_type, file_name, file_path
-                    else:
-                        return fragment_amount, s_socket, msg_type, "Default.jpg", "."
+
         except socket.timeout:
             print("TIMEOUT ERROR, server OFF")
             socket.close()
@@ -338,7 +340,14 @@ def recieve_msg(fragment_amount, s_socket, msg_type, file_name, file_path):
         if rename == 'Y' or rename == 'y':
             file_name = input("Input new file name: ")
 
-        file = open(file_name, "wb")
+        full_path = os.path.join(file_path, file_name)
+        print("Do you want to use this path to save the file?", full_path)
+        place = input("(Y/N): ")
+        if place == 'Y' or place == 'y':
+            file = open(full_path, "wb")
+        else:
+            print("Using default path")
+            file = open(file_name, "wb")
 
         for frag in whole_msg:
             file.write(frag)
