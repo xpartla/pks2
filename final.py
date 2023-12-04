@@ -105,8 +105,8 @@ def send_text(socket, server_ip):
 
     msg = input("Input your message: ")
     fragment_size = 0
-    while fragment_size >= 64965 or fragment_size <= 0:     #TODO: Change max fragment size
-        fragment_size = int(input("Input Fragment Size (max 64965B): "))
+    while fragment_size >= 1465 or fragment_size <= 0:
+        fragment_size = int(input("Input Fragment Size (max 1465B): "))
 
     #asi zle pomenovana variable fragment_amount -> packet_number? not sure
     fragment_amount = math.ceil(len(msg)/fragment_size)
@@ -128,7 +128,8 @@ def send_text(socket, server_ip):
         crc = binascii.crc_hqx(header + send, 0)
 
         if include_error == 'Y' or include_error == 'y':
-            if random.random() < 0.5: #teoreticky kazdy druhy packet je zly
+            error_pattern = 5
+            if fragment_amount % error_pattern == 0:
                 crc += 1
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), fragment_amount, crc)
@@ -160,8 +161,8 @@ def send_file(socket, server_ip):
     file_path = input("Input the directory name: ")
     frag_size = int(input("Input fragment size: "))
 
-    while frag_size >= 64965 or frag_size <= 0:     #TODO: Change max fragment size
-        frag_size = int(input("Input Fragment Size (max 64965B): "))
+    while frag_size >= 1465 or frag_size <= 0:     #TODO: Change max fragment size
+        frag_size = int(input("Input Fragment Size (max 1465B): "))
 
     size = os.path.getsize(file_name)
     print("File: ", file_name, "Size: ", size, "B")
@@ -195,7 +196,8 @@ def send_file(socket, server_ip):
         crc = binascii.crc_hqx(header + send, 0)
 
         if include_error == 'Y' or include_error == 'y':
-            if random.random() < 0.5:  # kazdy druhy packet je zly
+            error_pattern = 5
+            if frag_amount % error_pattern == 0:
                 crc += 1
 
         header = struct.pack("c", str.encode("2")) + struct.pack("HHH", len(send), frag_amount, crc)
