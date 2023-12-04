@@ -8,12 +8,14 @@ import time
 import random
 
 KA_STATUS = True
-
 CONN_INIT = "1"
 DATA_TRANSFER = "2"
 INCORRECT_DATA = "3"
 KA_MSG = "4"
 CORRECT_DATA = "5"
+FILE_NAME = "6"
+FILE_PATH = "7"
+
 TEXT_MSG = "1"
 FILE_MSG = "2"
 
@@ -132,8 +134,11 @@ def send_text(socket, server_ip):
 def send_file(socket, server_ip):
     global CORRECT_DATA
     global FILE_MSG
+    global FILE_NAME
+    global FILE_PATH
 
     file_name = input("Input the file name: ")
+    file_path = input("Input the file path: ")
     frag_size = int(input("Input fragment size: "))
 
     while frag_size >= 64965 or frag_size <= 0:     #TODO: Change max fragment size
@@ -151,6 +156,14 @@ def send_file(socket, server_ip):
     comm_start = (FILE_MSG + str(frag_amount))
     comm_start = comm_start.encode('utf-8').strip()
     socket.sendto(comm_start, server_ip)
+
+    fname_msg = FILE_NAME + file_name
+    fname_msg = fname_msg.encode('utf-8').strip()
+    socket.sendto(fname_msg, server_ip)
+
+    fpath_msg = FILE_PATH + file_path
+    fpath_msg = fpath_msg.encode('utf-8').strip()
+    socket.sendto(fpath_msg, server_ip)
 
     include_error = input("Include error?(Y/N):")
 
@@ -230,14 +243,15 @@ def run_server(socket, address):
                     if message_type == '1':
                         fragment_amount = info[1:]
                         print("Fragment amount: ", fragment_amount)
-                        recieve_msg(fragment_amount, socket, "text")
+                        recieve_msg(fragment_amount, socket, "text", None, None)
                         break
 
                     #File
                     if message_type == '2':
                         fragment_amount = info[1:]
                         print("Fragment amount: ", fragment_amount)
-                        recieve_msg(fragment_amount, socket, "file")
+                        fragment_amount, socket, msg_type, file_name, file_path = file_setup(fragment_amount, socket, "file")
+                        recieve_msg(fragment_amount, socket, "file", file_name, file_path)
                         break
 
             except socket.timeout:
@@ -246,12 +260,45 @@ def run_server(socket, address):
                 return
 
 
-def recieve_msg(fragment_amount, s_socket, msg_type):
+def file_setup(fragment_amount, s_socket, msg_type):
+    global FILE_NAME
+    global FILE_PATH
+    file_name = None
+    file_path = None
+    while True:
+        try:
+            s_socket.settimeout(20)
+            while True:
+                while True:
+                    data = s_socket.recvfrom(1500)
+                    info = str(data.decode())
+                    type = info[:1]
+                    msg_content = info[1:]
+                    if type == FILE_NAME:
+                        file_name = msg_content
+                    elif type == FILE_PATH:
+                        file_path = msg_content
+
+                    if file_path is not None and file_path is not None:
+                        return fragment_amount, s_socket, msg_type, file_name, file_path
+                    else:
+                        return fragment_amount, s_socket, msg_type, "Default.jpg", "."
+        except socket.timeout:
+            print("TIMEOUT ERROR, server OFF")
+            socket.close()
+            return
+
+
+def recieve_msg(fragment_amount, s_socket, msg_type, file_name, file_path):
     global CORRECT_DATA
     global INCORRECT_DATA
+    global FILE_NAME
+    global FILE_PATH
+
     fragment_counter = 0
     overall_fragments = 0
     whole_msg = []
+
     while True:
         if int(fragment_amount) == fragment_counter:
             break
@@ -287,13 +334,17 @@ def recieve_msg(fragment_amount, s_socket, msg_type):
         print("Message received: ", ''.join(whole_msg))
 
     if msg_type == "file":
-        file_name = "received.jpg"
+        rename = input("Do you want to rename file? (Y/N)")
+        if rename == 'Y' or rename == 'y':
+            file_name = input("Input new file name: ")
+
         file = open(file_name, "wb")
 
         for frag in whole_msg:
             file.write(frag)
         file.close()
         print("Name: ", file_name, "Size: ", os.path.getsize(file_name), "B")
+        print("Path where I want to save the file: ", file_path)
         print("Path: ", os.path.abspath(file_name))
 
 
@@ -337,7 +388,7 @@ def ka(socket, s_addr):
         except (socket.timeout, socket.error) as e:
             print(f"Error in keepalive: {e}")
             break
-        time.sleep(10)
+        time.sleep(5)
 
 if __name__ == '__main__':
     while True:
