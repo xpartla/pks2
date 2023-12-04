@@ -48,6 +48,7 @@ def run_client(socket, server_ip):
     print("You are now the CLIENT")
     keepalive = None
     global KA_STATUS
+    global CHANGE
 
     while True:
         ka_start = input("Turn on KA? (server has to be in listening mode) (Y/N)")
@@ -85,7 +86,12 @@ def run_client(socket, server_ip):
             if info == CLIENT_SWAP:
                 print("Swap Accepted, changing to client...")
                 run_server(socket, server_ip)
-        else:
+
+        if CHANGE:
+            CHANGE = False
+            run_server(socket, server_ip)
+            return
+    else:
             print("Wrong input, try again")
 
     return
